@@ -1,3 +1,9 @@
+## v0.3.0 (2026-04-07)
+
+### Feat
+
+- **ci**: add CI workflow with python, helm and docker tests
+
 ## v0.2.0 (2026-04-07)
 
 ### Feat

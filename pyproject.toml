@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "crossplane-watcher-operator"
-version = "0.2.0"
+version = "0.3.0"
 description = "Kubernetes operator that watches Crossplane claims and posts status updates on GitHub PRs."
 authors = [
     {name = "Cedric Delgehier", email = "cedric.delgehier@gmail.com"}
@@ -20,7 +20,7 @@ dependencies = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.0"
+version = "0.3.0"
 version_provider = "pep621"
 tag_format = "v$version"
 update_changelog_on_bump = true
