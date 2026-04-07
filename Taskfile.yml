@@ -1,0 +1,96 @@
+version: "3"
+
+vars:
+  SRC: cwo
+  TESTS: tests
+  HELM_CHART: helm/crossplane-watcher
+  IMAGE: ghcr.io/cdelgehier/crossplane-watcher-operator
+
+tasks:
+  default:
+    desc: List available tasks
+    cmd: task --list
+
+  # ── Dependencies ────────────────────────────────────────────────────────────
+
+  install:
+    desc: Install all dependencies (including dev)
+    cmd: uv sync --all-groups
+    sources:
+      - pyproject.toml
+      - uv.lock
+
+  # ── Linting & formatting ────────────────────────────────────────────────────
+
+  lint:
+    desc: Run ruff linter
+    cmd: uv run ruff check {{.SRC}} {{.TESTS}}
+
+  fmt:
+    desc: Format code with ruff
+    cmd: uv run ruff format {{.SRC}} {{.TESTS}}
+
+  fmt:check:
+    desc: Check formatting without modifying files
+    cmd: uv run ruff format --check {{.SRC}} {{.TESTS}}
+
+  # ── Python tests ────────────────────────────────────────────────────────────
+
+  test:py:
+    desc: Run Python test suite with coverage
+    cmd: uv run pytest
+
+  # ── Helm tests ──────────────────────────────────────────────────────────────
+
+  test:helm:
+    desc: Run Helm unit tests (requires helm-unittest plugin)
+    cmd: helm unittest {{.HELM_CHART}}
+
+  # ── Docker ──────────────────────────────────────────────────────────────────
+
+  docker:build:
+    desc: Build Docker image locally (tag :dev)
+    cmd: docker build -f docker/Dockerfile -t {{.IMAGE}}:dev .
+
+  test:docker:
+    desc: Run container-structure-test against the local image
+    deps: [docker:build]
+    cmd: container-structure-test test --image {{.IMAGE}}:dev --config docker/container-structure-test.yaml
+    env:
+      DOCKER_HOST: "unix://{{.DOCKER_SOCK}}"
+    vars:
+      DOCKER_SOCK:
+        sh: echo "${DOCKER_HOST#unix://}" | grep -q '/' && echo "${DOCKER_HOST#unix://}" || ([ -S "$HOME/.rd/docker.sock" ] && echo "$HOME/.rd/docker.sock" || echo "/var/run/docker.sock")
+
+  # ── All-in-one ──────────────────────────────────────────────────────────────
+
+  test:
+    desc: Run all tests (Python + Helm)
+    cmds:
+      - task: test:py
+      - task: test:helm
+
+  ci:
+    desc: Full CI pipeline (lint + format check + all tests)
+    cmds:
+      - task: lint
+      - task: fmt:check
+      - task: test
+
+  # ── Local dev ───────────────────────────────────────────────────────────────
+
+  up:
+    desc: Run the operator locally (requires CWO_GITHUB_TOKEN + kubeconfig)
+    cmd: uv run python -m cwo.main
+
+  # ── Pre-commit ──────────────────────────────────────────────────────────────
+
+  pre-commit:install:
+    desc: Install pre-commit hooks (pre-push + commit-msg)
+    cmds:
+      - pre-commit install
+      - pre-commit install --hook-type commit-msg
+
+  pre-commit:run:
+    desc: Run all pre-commit hooks on all files
+    cmd: pre-commit run --all-files

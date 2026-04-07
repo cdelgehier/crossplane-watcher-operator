@@ -1,0 +1,46 @@
+image:
+  # -- Container image registry
+  registry: ghcr.io
+  # -- Container image repository
+  repository: cdelgehier/crossplane-watcher-operator
+  # -- Container image tag (defaults to appVersion)
+  tag: ""
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  # -- Create a dedicated ServiceAccount
+  create: true
+  # -- Override the ServiceAccount name
+  name: ""
+
+# -- Operator configuration (injected as env vars with CWO_ prefix)
+config:
+  # -- Crossplane API group to watch
+  apiGroup: "homelab.crossplane.io"
+  # -- Discovery interval in seconds
+  discoveryIntervalSeconds: 60
+  # -- Log level
+  logLevel: "INFO"
+
+# -- Name of an existing Secret containing CWO_GITHUB_TOKEN
+# If empty, a Secret is created from secret.githubToken
+existingSecret: ""
+
+secret:
+  # -- GitHub PAT (only used when existingSecret is empty)
+  githubToken: ""
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+# -- Node selector for the operator pod
+nodeSelector: {}
+
+# -- Tolerations for the operator pod
+tolerations: []

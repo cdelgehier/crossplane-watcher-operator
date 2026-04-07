@@ -1,0 +1,70 @@
+schemaVersion: "2.0.0"
+
+metadataTest:
+  labels:
+    - key: org.opencontainers.image.description
+      value: "Crossplane Watcher Operator — watches Crossplane claims and posts status updates on GitHub PRs"
+  entrypoint: ["python", "-m", "cwo.main"]
+  workdir: "/app"
+  user: "app"
+
+fileExistenceTests:
+  - name: "Virtual environment exists"
+    path: /app/.venv/bin/python
+    shouldExist: true
+
+  - name: "Application module exists"
+    path: /app/cwo/main.py
+    shouldExist: true
+
+  - name: "Settings module exists"
+    path: /app/cwo/settings.py
+    shouldExist: true
+
+  - name: "No dev tooling (ruff) in image"
+    path: /app/.venv/bin/ruff
+    shouldExist: false
+
+  - name: "No dev tooling (pytest) in image"
+    path: /app/.venv/bin/pytest
+    shouldExist: false
+
+fileContentTests:
+  - name: "App user exists with uid 1000"
+    path: /etc/passwd
+    expectedContents: ["app:x:1000:1000"]
+
+commandTests:
+  - name: "Python is available"
+    command: "python"
+    args: ["--version"]
+    expectedOutput: ["Python 3\\.14"]
+
+  - name: "Application module is importable"
+    command: "python"
+    args: ["-c", "import cwo; print('ok')"]
+    expectedOutput: ["ok"]
+
+  - name: "httpx is installed"
+    command: "python"
+    args: ["-c", "import httpx; print(httpx.__version__)"]
+    exitCode: 0
+
+  - name: "structlog is installed"
+    command: "python"
+    args: ["-c", "import structlog; print(structlog.__version__)"]
+    exitCode: 0
+
+  - name: "kubernetes_asyncio is installed"
+    command: "python"
+    args: ["-c", "import kubernetes_asyncio; print('ok')"]
+    expectedOutput: ["ok"]
+
+  - name: "pydantic_settings is installed"
+    command: "python"
+    args: ["-c", "import pydantic_settings; print('ok')"]
+    expectedOutput: ["ok"]
+
+  - name: "Running as non-root user"
+    command: "whoami"
+    expectedOutput: ["app"]

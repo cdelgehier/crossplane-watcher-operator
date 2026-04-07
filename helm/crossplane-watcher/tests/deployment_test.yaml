@@ -1,0 +1,283 @@
+suite: deployment
+templates:
+  - templates/deployment.yaml
+release:
+  name: test-release
+  namespace: crossplane-system
+
+tests:
+  # -----------------------------------------------------------------
+  # Basic rendering
+  # -----------------------------------------------------------------
+  - it: should render a Deployment
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: should set the correct name
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: metadata.name
+          value: test-release-crossplane-watcher
+
+  - it: should set the namespace
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: crossplane-system
+
+  - it: should default to 1 replica
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  # -----------------------------------------------------------------
+  # Container image
+  # -----------------------------------------------------------------
+  - it: should use appVersion as default tag
+    set:
+      secret.githubToken: mytoken
+      image.registry: registry.example.com
+      image.repository: my-org/my-app
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "^registry.example.com/my-org/my-app:v\\d+\\.\\d+\\.\\d+$"
+
+  - it: should use image.tag when set
+    set:
+      secret.githubToken: mytoken
+      image.registry: registry.example.com
+      image.repository: my-org/my-app
+      image.tag: "1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/my-org/my-app:v1.2.3"
+
+  - it: should set imagePullPolicy
+    set:
+      secret.githubToken: mytoken
+      image.pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  # -----------------------------------------------------------------
+  # Environment variables
+  # -----------------------------------------------------------------
+  - it: should inject CWO_GITHUB_TOKEN from generated secret
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: CWO_GITHUB_TOKEN
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: test-release-crossplane-watcher
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.key
+          value: github_token
+
+  - it: should use existingSecret for token when set
+    set:
+      existingSecret: my-external-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: my-external-secret
+
+  - it: should inject CWO_API_GROUP
+    set:
+      secret.githubToken: mytoken
+      config.apiGroup: custom.example.io
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CWO_API_GROUP
+            value: custom.example.io
+
+  - it: should inject CWO_DISCOVERY_INTERVAL_SECONDS
+    set:
+      secret.githubToken: mytoken
+      config.discoveryIntervalSeconds: 120
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CWO_DISCOVERY_INTERVAL_SECONDS
+            value: "120"
+
+  - it: should inject CWO_LOG_LEVEL
+    set:
+      secret.githubToken: mytoken
+      config.logLevel: DEBUG
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CWO_LOG_LEVEL
+            value: DEBUG
+
+  # -----------------------------------------------------------------
+  # ServiceAccount
+  # -----------------------------------------------------------------
+  - it: should reference the default serviceAccount
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: test-release-crossplane-watcher
+
+  - it: should reference a custom serviceAccount name
+    set:
+      secret.githubToken: mytoken
+      serviceAccount.name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  # -----------------------------------------------------------------
+  # Security
+  # -----------------------------------------------------------------
+  - it: should run as non-root user 1000
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+
+  - it: should set readOnlyRootFilesystem true
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  - it: should mount emptyDir on /tmp
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: tmp
+      - equal:
+          path: spec.template.spec.volumes[0].emptyDir
+          value: {}
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /tmp
+
+  # -----------------------------------------------------------------
+  # Probes
+  # -----------------------------------------------------------------
+  - it: should have liveness probe
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].livenessProbe
+
+  - it: should have readiness probe
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  # -----------------------------------------------------------------
+  # Labels
+  # -----------------------------------------------------------------
+  - it: should include selector labels
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
+          value: crossplane-watcher
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: test-release
+
+  # -----------------------------------------------------------------
+  # Resources
+  # -----------------------------------------------------------------
+  - it: should set resource limits and requests
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 10m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 64Mi
+
+  # -----------------------------------------------------------------
+  # NodeSelector & Tolerations
+  # -----------------------------------------------------------------
+  - it: should not render nodeSelector by default
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector
+
+  - it: should render nodeSelector when set
+    set:
+      secret.githubToken: mytoken
+      nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["kubernetes.io/os"]
+          value: linux
+
+  - it: should not render tolerations by default
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isNull:
+          path: spec.template.spec.tolerations
+
+  - it: should render tolerations when set
+    set:
+      secret.githubToken: mytoken
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: crossplane
+          effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: dedicated
+            operator: Equal
+            value: crossplane
+            effect: NoSchedule

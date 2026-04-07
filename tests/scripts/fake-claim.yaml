@@ -1,0 +1,16 @@
+# Fake claim with GitHub annotations to test the operator locally.
+# Apply with: kubectl apply -f tests/scripts/fake-claim.yaml
+#
+# Replace with a real GitHub repo and PR number to see the comment posted.
+# Or use dummy values to just observe the operator logs.
+apiVersion: homelab.crossplane.io/v1alpha1
+kind: FakeResource
+metadata:
+  name: test-claim
+  namespace: default
+  annotations:
+    homelab.io/github-repo: "cdelgehier/homelab-endusers"
+    homelab.io/github-pr: "1"
+    homelab.io/github-sha: "abc123def"
+spec:
+  fakefield: "hello"

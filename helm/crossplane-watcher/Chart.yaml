@@ -1,0 +1,6 @@
+apiVersion: v2
+name: crossplane-watcher
+description: Helm chart for the Crossplane Watcher Operator — watches Crossplane claims and posts status updates on GitHub PRs
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

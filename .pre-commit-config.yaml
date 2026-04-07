@@ -1,0 +1,73 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+  python: python3.14
+
+repos:
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.9.1
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages: [manual]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.18
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-yaml
+        args: [--unsafe]
+        exclude: ^helm/.*
+      - id: check-toml
+      - id: detect-private-key
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.14.2
+    hooks:
+      - id: helm-docs
+        args:
+          - --chart-search-root=helm
+
+  - repo: local
+    hooks:
+      - id: helm-lint
+        name: Helm Lint
+        entry: helm lint helm/crossplane-watcher
+        language: system
+        types: [yaml]
+        pass_filenames: false
+        files: ^helm/
+
+      - id: helm-template
+        name: Helm Template
+        entry: helm template crossplane-watcher helm/crossplane-watcher --set secret.githubToken=dummy
+        language: system
+        types: [yaml]
+        pass_filenames: false
+        files: ^helm/
+
+      - id: helm-unittest
+        name: Helm Unittest
+        entry: helm unittest helm/crossplane-watcher --strict
+        language: system
+        types: [yaml]
+        pass_filenames: false
+        files: ^helm/
