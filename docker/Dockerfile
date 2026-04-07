@@ -5,7 +5,7 @@ FROM ghcr.io/astral-sh/uv:0.11.3-python3.14-trixie-slim AS builder
 
 WORKDIR /build
 
-ARG APP_VERSION=0.1.0
+ARG APP_VERSION=0.2.0
 
 COPY pyproject.toml ./
 
@@ -21,7 +21,7 @@ COPY cwo/ ./cwo/
 # Runtime stage
 FROM ghcr.io/astral-sh/uv:0.11.3-python3.14-trixie-slim
 
-ARG APP_VERSION=0.1.0
+ARG APP_VERSION=0.2.0
 
 COPY --from=builder /build/.venv /app/.venv
 COPY --from=builder /build/cwo /app/cwo
