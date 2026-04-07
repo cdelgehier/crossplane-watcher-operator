@@ -16,14 +16,16 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+      - name: Install task
+        uses: arduino/setup-task@v2
       - name: Install dependencies
-        run: uv sync --all-groups
+        run: task install
       - name: Lint
-        run: uv run task lint
+        run: task lint
       - name: Format check
-        run: uv run task fmt:check
+        run: task fmt:check
       - name: Run tests
-        run: uv run task test:py
+        run: task test:py
 
   test-helm:
     name: Helm tests
@@ -32,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: azure/setup-helm@v4
       - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
       - name: Install task
         uses: arduino/setup-task@v2
       - name: Run Helm tests
