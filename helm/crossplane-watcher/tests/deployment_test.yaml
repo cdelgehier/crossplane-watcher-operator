@@ -64,6 +64,17 @@ tests:
           path: spec.template.spec.containers[0].image
           value: "registry.example.com/my-org/my-app:v1.2.3"
 
+  - it: should not add v prefix to non-numeric tags like latest
+    set:
+      secret.githubToken: mytoken
+      image.registry: registry.example.com
+      image.repository: my-org/my-app
+      image.tag: "latest"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "registry.example.com/my-org/my-app:latest"
+
   - it: should set imagePullPolicy
     set:
       secret.githubToken: mytoken
