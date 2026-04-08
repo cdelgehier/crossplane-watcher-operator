@@ -36,6 +36,8 @@ spec:
               value: {{ .Values.config.discoveryIntervalSeconds | quote }}
             - name: CWO_LOG_LEVEL
               value: {{ .Values.config.logLevel | quote }}
+            - name: CWO_KUBE_SSL_STRICT
+              value: {{ .Values.config.kubeSslStrict | quote }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:

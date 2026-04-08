@@ -22,6 +22,8 @@ config:
   discoveryIntervalSeconds: 60
   # -- Log level
   logLevel: "INFO"
+  # -- Enable strict X509 validation for K8s API (disable for self-signed cluster CAs)
+  kubeSslStrict: false
 
 # -- Name of an existing Secret containing CWO_GITHUB_TOKEN
 # If empty, a Secret is created from secret.githubToken
