@@ -41,6 +41,9 @@ resources:
     cpu: 10m
     memory: 64Mi
 
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
 # -- Node selector for the operator pod
 nodeSelector: {}
 
