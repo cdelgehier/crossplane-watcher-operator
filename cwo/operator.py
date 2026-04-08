@@ -13,6 +13,7 @@ How it works:
 
 import asyncio
 import pathlib
+import ssl
 
 from kubernetes_asyncio import config
 from kubernetes_asyncio.client import ApiClient
@@ -29,6 +30,32 @@ _HEALTHY_FILE = pathlib.Path("/tmp/healthy")  # noqa: S108
 _READY_FILE = pathlib.Path("/tmp/ready")  # noqa: S108
 
 
+def _relax_kube_ssl() -> None:
+    """Work around Python 3.13+ strict X509 validation on Kubernetes.
+
+    Kubernetes cluster CAs are self-signed and lack the *Authority Key Identifier*
+    extension.  Starting with Python 3.13 / OpenSSL 3.x the default SSL
+    context sets ``VERIFY_X509_STRICT`` which rejects such certificates.
+
+    We monkey-patch ``ssl.create_default_context`` so that every context
+    returned has the strict flag cleared.  This is safe because:
+      - The CA certificate is still fully verified against the trust store.
+      - Only the "nice-to-have" AKI metadata check is skipped.
+    """
+    _original = ssl.create_default_context
+
+    def _patched(*args: object, **kwargs: object) -> ssl.SSLContext:
+        ctx = _original(*args, **kwargs)
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
+        return ctx
+
+    ssl.create_default_context = _patched  # type: ignore[assignment]
+    log.info(
+        "relaxed X509_STRICT for kube self-signed CA",
+        openssl=ssl.OPENSSL_VERSION,
+    )
+
+
 async def _discover_resources(api_client: ApiClient) -> list:
     """Find all Crossplane resource types in the watched API group."""
     async with DynamicClient(api_client, discoverer=EagerDiscoverer) as dyn_client:
@@ -43,6 +70,9 @@ async def _discover_resources(api_client: ApiClient) -> list:
 
 async def run() -> None:
     """Main operator loop: discover CRDs and manage one watch task per resource kind."""
+    if not SETTINGS.kube_ssl_strict:
+        _relax_kube_ssl()
+
     try:
         config.load_incluster_config()
         log.info("using in-cluster kubeconfig")

@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     watch_timeout_seconds: int = 300
     lease_duration: int = 30
     kube_context: str | None = None
+    kube_ssl_strict: bool = False
 
     # --- Annotation keys: read from claims (injected by CI) ---
     annotation_github_repo: str = "homelab.io/github-repo"  # e.g. "cdelgehier/homelab-endusers"

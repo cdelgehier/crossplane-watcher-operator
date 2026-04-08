@@ -8,9 +8,10 @@ Helm chart for the Crossplane Watcher Operator — watches Crossplane claims and
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config | object | `{"apiGroup":"homelab.crossplane.io","discoveryIntervalSeconds":60,"logLevel":"INFO"}` | Operator configuration (injected as env vars with CWO_ prefix) |
+| config | object | `{"apiGroup":"homelab.crossplane.io","discoveryIntervalSeconds":60,"kubeSslStrict":false,"logLevel":"INFO"}` | Operator configuration (injected as env vars with CWO_ prefix) |
 | config.apiGroup | string | `"homelab.crossplane.io"` | Crossplane API group to watch |
 | config.discoveryIntervalSeconds | int | `60` | Discovery interval in seconds |
+| config.kubeSslStrict | bool | `false` | Enable strict X509 validation for K8s API (disable for self-signed cluster CAs) |
 | config.logLevel | string | `"INFO"` | Log level |
 | existingSecret | string | `""` | Name of an existing Secret containing CWO_GITHUB_TOKEN If empty, a Secret is created from secret.githubToken |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |

@@ -131,6 +131,27 @@ tests:
             name: CWO_LOG_LEVEL
             value: DEBUG
 
+  - it: should inject CWO_KUBE_SSL_STRICT as false by default
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CWO_KUBE_SSL_STRICT
+            value: "false"
+
+  - it: should inject CWO_KUBE_SSL_STRICT when set to true
+    set:
+      secret.githubToken: mytoken
+      config.kubeSslStrict: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CWO_KUBE_SSL_STRICT
+            value: "true"
+
   # -----------------------------------------------------------------
   # ServiceAccount
   # -----------------------------------------------------------------

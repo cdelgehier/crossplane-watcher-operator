@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,6 +16,7 @@ def mock_settings(monkeypatch):
     settings = MagicMock()
     settings.api_group = "homelab.crossplane.io"
     settings.discovery_interval_seconds = 60
+    settings.kube_ssl_strict = True  # disable the monkey-patch in unit tests
     monkeypatch.setattr(operator, "SETTINGS", settings)
     return settings
 
@@ -30,6 +32,31 @@ def _make_api_client():
     api_client.__aenter__.return_value = api_client
     api_client.__aexit__.return_value = None
     return api_client
+
+
+# ---------------------------------------------------------------------------
+# _relax_kube_ssl
+# ---------------------------------------------------------------------------
+
+
+def test_relax_kube_ssl_clears_strict_flag():
+    original = ssl.create_default_context
+    try:
+        operator._relax_kube_ssl()
+        ctx = ssl.create_default_context()
+        assert not (ctx.verify_flags & ssl.VERIFY_X509_STRICT)
+    finally:
+        ssl.create_default_context = original
+
+
+def test_relax_kube_ssl_preserves_ca_verification():
+    original = ssl.create_default_context
+    try:
+        operator._relax_kube_ssl()
+        ctx = ssl.create_default_context()
+        assert ctx.verify_mode == ssl.CERT_REQUIRED
+    finally:
+        ssl.create_default_context = original
 
 
 # ---------------------------------------------------------------------------
