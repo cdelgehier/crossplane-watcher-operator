@@ -67,6 +67,6 @@ Container image reference.
 */}}
 {{- define "crossplane-watcher.image" -}}
 {{- $tag := default .Chart.AppVersion .Values.image.tag -}}
-{{- if not (hasPrefix "v" $tag) -}}{{- $tag = printf "v%s" $tag -}}{{- end -}}
+{{- if and (not (hasPrefix "v" $tag)) (regexMatch "^[0-9]" $tag) -}}{{- $tag = printf "v%s" $tag -}}{{- end -}}
 {{- printf "%s/%s:%s" .Values.image.registry .Values.image.repository $tag -}}
 {{- end }}
