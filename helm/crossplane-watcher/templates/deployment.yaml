@@ -44,8 +44,11 @@ spec:
                   fieldPath: metadata.name
           livenessProbe:
             exec:
-              command: ["test", "-f", "/tmp/healthy"]
-            initialDelaySeconds: 10
+              command:
+                - python
+                - -c
+                - "import os, time; exit(0 if time.time() - os.stat('/tmp/healthy').st_mtime < {{ mul .Values.config.discoveryIntervalSeconds 3 }} else 1)"
+            initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
           readinessProbe:
