@@ -222,12 +222,29 @@ tests:
   # -----------------------------------------------------------------
   # Probes
   # -----------------------------------------------------------------
-  - it: should have liveness probe
+  - it: should have time-based liveness probe using discovery interval
     set:
       secret.githubToken: mytoken
+      config.discoveryIntervalSeconds: 60
     asserts:
-      - isNotNull:
-          path: spec.template.spec.containers[0].livenessProbe
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[0]
+          value: python
+      - matchRegex:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
+          pattern: "mtime < 180"
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 30
+
+  - it: should scale liveness threshold with discovery interval
+    set:
+      secret.githubToken: mytoken
+      config.discoveryIntervalSeconds: 120
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
+          pattern: "mtime < 360"
 
   - it: should have readiness probe
     set:
