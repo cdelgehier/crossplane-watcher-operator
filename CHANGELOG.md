@@ -1,3 +1,15 @@
+## v0.4.0 (2026-04-08)
+
+### Feat
+
+- **helm**: add imagePullSecrets support for private registries
+
+### Fix
+
+- **helm**: use time-based liveness probe to detect stuck operator
+- **helm**: only add v prefix to numeric image tags
+- relax strict X509 validation for self-signed K8s cluster CAs
+
 ## v0.3.1 (2026-04-07)
 
 ### Fix
