@@ -288,6 +288,27 @@ tests:
           value: 64Mi
 
   # -----------------------------------------------------------------
+  # ImagePullSecrets
+  # -----------------------------------------------------------------
+  - it: should not render imagePullSecrets by default
+    set:
+      secret.githubToken: mytoken
+    asserts:
+      - isNull:
+          path: spec.template.spec.imagePullSecrets
+
+  - it: should render imagePullSecrets when set
+    set:
+      secret.githubToken: mytoken
+      imagePullSecrets:
+        - name: my-registry-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content:
+            name: my-registry-secret
+
+  # -----------------------------------------------------------------
   # NodeSelector & Tolerations
   # -----------------------------------------------------------------
   - it: should not render nodeSelector by default

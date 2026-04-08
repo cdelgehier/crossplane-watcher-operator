@@ -18,6 +18,7 @@ Helm chart for the Crossplane Watcher Operator — watches Crossplane claims and
 | image.registry | string | `"ghcr.io"` | Container image registry |
 | image.repository | string | `"cdelgehier/crossplane-watcher-operator"` | Container image repository |
 | image.tag | string | `""` | Container image tag (defaults to appVersion) |
+| imagePullSecrets | list | `[]` | Image pull secrets for private registries |
 | nodeSelector | object | `{}` | Node selector for the operator pod |
 | resources.limits.cpu | string | `"200m"` |  |
 | resources.limits.memory | string | `"128Mi"` |  |
